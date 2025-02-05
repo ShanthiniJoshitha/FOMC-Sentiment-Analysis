@@ -77,14 +77,18 @@ def process_statement(statement):
 
     positive_percentage = (positive_count / total) * 100 if total > 0 else 0
     negative_percentage = (negative_count / total) * 100 if total > 0 else 0
-    neutral_percentage = (neutral_count / total) * 100 if total > 0 else 0
 
-    overall_sentiment = max(sentiments, key=sentiments.count) if sentiments else "neutral"
+    # Compare positive and negative percentages for overall sentiment
+    if positive_percentage > negative_percentage:
+        overall_sentiment = "positive"
+    elif negative_percentage > positive_percentage:
+        overall_sentiment = "negative"
+    else:
+        overall_sentiment = "neutral"
 
     return {
         "Positive Percentage": positive_percentage,
         "Negative Percentage": negative_percentage,
-        "Neutral Percentage": neutral_percentage,
         "Overall Sentiment": overall_sentiment
     }
 
@@ -111,10 +115,8 @@ if st.button("Analyze Sentiment"):
         try:
             result = process_statement(user_input)
             st.subheader("Sentiment Analysis Results:")
-            st.write(f"**Positive Percentage:** {result['Positive Percentage']:.2f}%")
-            st.write(f"**Negative Percentage:** {result['Negative Percentage']:.2f}%")
-            st.write(f"**Neutral Percentage:** {result['Neutral Percentage']:.2f}%")
-            st.write(f"**Overall Sentiment:** {result['Overall Sentiment'].capitalize()}")
+            st.write(f"In whole, the above statement has **{result['Positive Percentage']:.2f}%** positive and **{result['Negative Percentage']:.2f}%** negative sentiment.")
+            st.write(f"The overall sentiment of the statement is **{result['Overall Sentiment'].capitalize()}**.")
         except Exception as e:
             st.error(f"An error occurred during sentiment analysis: {e}")
     else:
