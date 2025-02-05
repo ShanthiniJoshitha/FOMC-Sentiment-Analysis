@@ -9,8 +9,8 @@ if not hf_token:
     st.error("Hugging Face token is missing! Please add it to Streamlit secrets.")
     st.stop()
 
-# Define the model name
-model_name = "yiyanghkust/finbert-tone"
+# Define the model name for DistilBERT fine-tuned on SST-2
+model_name = "distilbert-base-uncased-finetuned-sst-2-english"
 
 # Load the tokenizer
 try:
@@ -56,56 +56,44 @@ st.sidebar.write("Wisconsin University")
 
 # Function to process the input statement
 def process_statement(statement):
-    # Tokenize and truncate the statement to ensure it fits within the model's input size
-    try:
-        inputs = tokenizer(statement, truncation=True, padding=True, max_length=512, return_tensors="pt")
+    lines = statement.split('.')
+    sentiments = []
 
-        # Analyze sentiment using the model
-        result = sentiment_analyzer(statement)
+    for line in lines:
+        line = line.strip()
+        if line:
+            try:
+                result = sentiment_analyzer(line)
+                sentiments.append(result[0]['label'].lower())
+            except Exception as e:
+                st.warning(f"Error analyzing sentiment for the line: {line}. Error: {e}")
+                sentiments.append("neutral")
+    
+    positive_count = sentiments.count('positive')
+    negative_count = sentiments.count('negative')
+    neutral_count = sentiments.count('neutral')
+    total = len(sentiments)
 
-        # Debugging: Output raw result for inspection
-        st.write("Raw Model Output: ", result)
+    positive_percentage = (positive_count / total) * 100 if total > 0 else 0
+    negative_percentage = (negative_count / total) * 100 if total > 0 else 0
 
-        sentiment = result[0]['label'].lower() if result else "neutral"
-        
-        # Counting sentiment types
-        positive_count = 0
-        negative_count = 0
-        neutral_count = 0
+    # Compare positive and negative percentages for overall sentiment
+    if positive_percentage > negative_percentage:
+        overall_sentiment = "positive"
+    elif negative_percentage > positive_percentage:
+        overall_sentiment = "negative"
+    else:
+        overall_sentiment = "neutral"
 
-        if sentiment == 'positive':
-            positive_count += 1
-        elif sentiment == 'negative':
-            negative_count += 1
-        else:
-            neutral_count += 1
-
-        total = positive_count + negative_count + neutral_count  # Total count of sentiments
-
-        positive_percentage = (positive_count / total) * 100 if total > 0 else 0
-        negative_percentage = (negative_count / total) * 100 if total > 0 else 0
-
-        # Compare positive and negative percentages for overall sentiment
-        if positive_percentage > negative_percentage:
-            overall_sentiment = "positive"
-        elif negative_percentage > positive_percentage:
-            overall_sentiment = "negative"
-        else:
-            overall_sentiment = "neutral"
-
-        return {
-            "Positive Percentage": positive_percentage,
-            "Negative Percentage": negative_percentage,
-            "Overall Sentiment": overall_sentiment
-        }
-
-    except Exception as e:
-        st.warning(f"Error during sentiment analysis: {e}")
-        return {"Positive Percentage": 0, "Negative Percentage": 0, "Overall Sentiment": "neutral"}
+    return {
+        "Positive Percentage": positive_percentage,
+        "Negative Percentage": negative_percentage,
+        "Overall Sentiment": overall_sentiment
+    }
 
 # Streamlit App UI
 st.title("FOMC Sentiment Analysis")
-st.write("Analyze the sentiment of FOMC statements using a fine-tuned financial model.")
+st.write("Analyze the sentiment of FOMC statements using a fine-tuned DistilBERT model for sentiment analysis.")
 
 # Navigation panel
 option = st.radio("Select Input Method:", ("Excel", "Direct"))
