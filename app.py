@@ -59,7 +59,13 @@ def process_statement(statement):
     # Analyze the sentiment of the full statement rather than individual sentences
     try:
         result = sentiment_analyzer(statement)
-        sentiment = result[0]['label'].lower()
+
+        # Debugging: Output raw result for inspection
+        st.write("Raw Model Output: ", result)
+
+        sentiment = result[0]['label'].lower() if result else "neutral"
+        
+        # Counting sentiment types
         positive_count = 0
         negative_count = 0
         neutral_count = 0
@@ -71,7 +77,7 @@ def process_statement(statement):
         else:
             neutral_count += 1
 
-        total = len(result)
+        total = positive_count + negative_count + neutral_count  # Total count of sentiments
 
         positive_percentage = (positive_count / total) * 100 if total > 0 else 0
         negative_percentage = (negative_count / total) * 100 if total > 0 else 0
