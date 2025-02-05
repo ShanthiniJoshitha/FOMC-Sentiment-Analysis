@@ -48,7 +48,6 @@ except Exception as e:
     st.stop()
 
 # Streamlit Sidebar - subtle ownership mention
-#st.sidebar.title("Sentiment Analysis App")
 owner_name = "**Dr. Narendra Regmi**"  # Bold the owner's name
 st.sidebar.write(owner_name)
 st.sidebar.write("Assistant Professor")
@@ -57,40 +56,43 @@ st.sidebar.write("Wisconsin University")
 
 # Function to process the input statement
 def process_statement(statement):
-    lines = statement.split('.')
-    sentiments = []
+    # Analyze the sentiment of the full statement rather than individual sentences
+    try:
+        result = sentiment_analyzer(statement)
+        sentiment = result[0]['label'].lower()
+        positive_count = 0
+        negative_count = 0
+        neutral_count = 0
 
-    for line in lines:
-        line = line.strip()
-        if line:
-            try:
-                result = sentiment_analyzer(line)
-                sentiments.append(result[0]['label'].lower())
-            except Exception as e:
-                st.warning(f"Error analyzing sentiment for the line: {line}. Error: {e}")
-                sentiments.append("neutral")
-    
-    positive_count = sentiments.count('positive')
-    negative_count = sentiments.count('negative')
-    neutral_count = sentiments.count('neutral')
-    total = len(sentiments)
+        if sentiment == 'positive':
+            positive_count += 1
+        elif sentiment == 'negative':
+            negative_count += 1
+        else:
+            neutral_count += 1
 
-    positive_percentage = (positive_count / total) * 100 if total > 0 else 0
-    negative_percentage = (negative_count / total) * 100 if total > 0 else 0
+        total = len(result)
 
-    # Compare positive and negative percentages for overall sentiment
-    if positive_percentage > negative_percentage:
-        overall_sentiment = "positive"
-    elif negative_percentage > positive_percentage:
-        overall_sentiment = "negative"
-    else:
-        overall_sentiment = "neutral"
+        positive_percentage = (positive_count / total) * 100 if total > 0 else 0
+        negative_percentage = (negative_count / total) * 100 if total > 0 else 0
 
-    return {
-        "Positive Percentage": positive_percentage,
-        "Negative Percentage": negative_percentage,
-        "Overall Sentiment": overall_sentiment
-    }
+        # Compare positive and negative percentages for overall sentiment
+        if positive_percentage > negative_percentage:
+            overall_sentiment = "positive"
+        elif negative_percentage > positive_percentage:
+            overall_sentiment = "negative"
+        else:
+            overall_sentiment = "neutral"
+
+        return {
+            "Positive Percentage": positive_percentage,
+            "Negative Percentage": negative_percentage,
+            "Overall Sentiment": overall_sentiment
+        }
+
+    except Exception as e:
+        st.warning(f"Error during sentiment analysis: {e}")
+        return {"Positive Percentage": 0, "Negative Percentage": 0, "Overall Sentiment": "neutral"}
 
 # Streamlit App UI
 st.title("FOMC Sentiment Analysis")
