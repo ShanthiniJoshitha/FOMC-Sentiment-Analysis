@@ -56,8 +56,11 @@ st.sidebar.write("Wisconsin University")
 
 # Function to process the input statement
 def process_statement(statement):
-    # Analyze the sentiment of the full statement rather than individual sentences
+    # Tokenize and truncate the statement to ensure it fits within the model's input size
     try:
+        inputs = tokenizer(statement, truncation=True, padding=True, max_length=512, return_tensors="pt")
+
+        # Analyze sentiment using the model
         result = sentiment_analyzer(statement)
 
         # Debugging: Output raw result for inspection
